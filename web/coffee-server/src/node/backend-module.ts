@@ -10,6 +10,7 @@
  */
 import { LaunchOptions } from '@eclipse-emfcloud/modelserver-theia';
 import { BackendApplicationContribution } from '@theia/core/lib/node/backend-application';
+import { sync } from 'glob';
 import { ContainerModule, injectable } from 'inversify';
 import { join, resolve } from 'path';
 
@@ -25,13 +26,21 @@ export default new ContainerModule((bind, _unbind, isBound, rebind) => {
     bind(BackendApplicationContribution).to(GLSPServerLauncher);
 });
 
+const getJarPath = (server: string): string => {
+    const serverPath = resolve(join(__dirname, '..', '..', 'server', server));
+    const jarPaths = sync('**/plugins/org.eclipse.equinox.launcher_*.jar', { cwd: serverPath });
+    const jarPath = resolve(serverPath, jarPaths[0]);
+    return jarPath;
+}
 @injectable()
 export class CoffeeLaunchOptions implements LaunchOptions {
     isRunning = false;
     baseURL = 'api/v1/';
     serverPort = 8081;
     hostname = 'localhost';
-    jarPath = resolve(join(__dirname, '..', '..', 'build', 'com.eclipsesource.coffee.modelserver-0.1.0-SNAPSHOT-standalone.jar'));
+    // jarPath = resolve(join(__dirname, '..', '..', 'server', 'model', 'x86_64', 'plugins', 'org.eclipse.equinox.launcher_*.jar'));
+    jarPath = getJarPath('model')
+
     additionalArgs = ['--errorsOnly'];
 }
 
@@ -40,5 +49,6 @@ export class CoffeeGlspLaunchOptions implements GLSPLaunchOptions {
     isRunning: false;
     serverPort: 5008;
     hostname: 'localhost';
-    jarPath = resolve(join(__dirname, '..', '..', 'build', 'com.eclipsesource.workflow.glsp.server-0.0.1-SNAPSHOT-glsp.jar'));
+    // jarPath = resolve(join(__dirname, '..', '..', 'server', 'glsp', 'x86_64', 'plugins', 'org.eclipse.equinox.launcher_*.jar'));
+    jarPath = getJarPath('glsp')
 }
